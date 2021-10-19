@@ -3,6 +3,11 @@
 #include <dbg.h>
 #include <elf.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "list_syms.h"
 
 #define BUFFER_SIZE 4096
@@ -12,61 +17,78 @@
 #error "Needs to be compiled on linux"
 #endif
 
-uint8_t *read_section_at(FILE *, ElfW(Ehdr), int);
-uint8_t *read_section(FILE *, ElfW(Shdr));
+#include <elf.h>
+#if defined(__LP64__)
+#define ElfW(type) Elf64_ ## type
+#else
+#define ElfW(type) Elf32_ ## type
+#endif
 
-symbol_dict_t *mk_symbol_dict(char * filename) {
-  FILE *file = fopen(filename, "rb");
-  check(file, "not normal file %s", filename);
+typedef struct bank_index {
+  int bank;
+  int offset;
+} bank_index;
+
+typedef struct symbol_searcher_t {
+  int fd;
+  int bank_len;
+  char **bank;
+  int idx_len;
+  bank_index* idx;
+  int cur;
+} symbol_searcher_t;
+
+uint8_t *read_section(int, ElfW(Shdr));
+int read_section_header(int fd, ElfW(Ehdr) header, size_t i, ElfW(Shdr) *section_header);
+
+symbol_searcher mk_symbol_searcher(char * filename) {
+  ssize_t size;
+  int res;
+
+  int fd = open(filename, O_RDONLY);
+  check(fd != -1, "not normal file %s", filename);
 
   ElfW(Ehdr) header;
-
-  int res = fread(&header, sizeof(header), 1, file);
-  check(res == 1, "failed to read elf header");
+  size = read(fd, &header, sizeof(ElfW(Ehdr)));
+  check(size == sizeof(ElfW(Ehdr)), "failed to read header");
   check(memcmp(header.e_ident, ELFMAG, SELFMAG) == 0, "not a valid elf file: %s", filename);
 
-  struct symbol_dict_t *dict = malloc(sizeof(struct symbol_dict_t));
+  struct symbol_searcher_t *dict = malloc(sizeof(struct symbol_searcher_t));
 
-  dict->file = file;
-  dict->buffer = calloc(sizeof(char*), BUFFER_SIZE);
+  dict->fd = fd;
+  dict->bank_len = header.e_shnum;
+  dict->bank = malloc(header.e_shnum * sizeof(char*));
   dict->cur = 0;
+  dict->idx = malloc(4096);
 
-  ElfW(Off) strsh = header.e_shoff + (header.e_shstrndx * header.e_shentsize);
-
-  res = fseek(file, strsh, SEEK_SET);
-  check(!res, "failed to seek to str section header");
+  memset(dict->bank, 0, header.e_shnum * sizeof(void*));
 
   ElfW(Shdr) sect_header;
-  res = fread(&sect_header, sizeof(sect_header), 1, file);
-  check(res == 1, "failed to read in section header");
+  res = read_section_header(fd, header, header.e_shstrndx, &sect_header);
+  check(!res, "failed to read string table");
 
-  ElfW(Off) str_off = sect_header.sh_offset;
-  ElfW(Xword) str_size = sect_header.sh_size;
-
-  res = fseek(file, str_off, SEEK_SET);
-  check(!res, "failed to seek to str buffer");
-
-  char *buffer = malloc(str_size);
+  char *buffer = (char*)read_section(fd, sect_header);
   check_mem(buffer);
 
-  res = fread(buffer, 1, str_size, file);
-  check((ElfW(Xword))res == str_size, "failed to read section header buffer");
-
-  dict->strs = buffer;
 
   for (int i = 0; i < header.e_shnum; i++) {
-    ElfW(Off) off = header.e_shoff + (i * header.e_shentsize);
-
-    res = fseek(file, off, SEEK_SET);
-    check(!res, "failed to seek to section");
-
     ElfW(Shdr) sect;
-    res = fread(&sect, sizeof(sect), 1, file);
-    check(res == 1, "failed to read section");
+
+    res = read_section_header(fd, header, i, &sect);
+    check(!res, "failed to read section header");
 
     if (sect.sh_type == SHT_DYNSYM) {
-      char *link_buffer = (char*) read_section_at(file, header, sect.sh_link);
-      ElfW(Sym) *symbols = (ElfW(Sym)*) read_section(file, sect);
+      ElfW(Shdr) link;
+
+      res = read_section_header(fd, header, sect.sh_link, &link);
+      check(!res, "reading linked section");
+
+      if (!dict->bank[sect.sh_link]) {
+        debug("Adding bank: %d", sect.sh_link);
+        dict->bank[sect.sh_link] = (char*) read_section(fd, link);
+      }
+
+      ElfW(Sym) *symbols = (ElfW(Sym)*) read_section(fd, sect);
 
       for (int i = 0, size = 0; size < (int) sect.sh_size; i++, size += sect.sh_entsize) {
         ElfW(Sym) s = symbols[i];
@@ -77,77 +99,63 @@ symbol_dict_t *mk_symbol_dict(char * filename) {
           continue;
         }
 
-        debug("type: %i, bind: %i", type, bind);
-        debug("found symbol: %s", link_buffer + s.st_name);
+        bank_index idx = { sect.sh_link, s.st_name };
+        dict->idx[dict->idx_len++] = idx;
+
+        debug("idx { bank: %d, offset: %d }", idx.bank, idx.offset);
       }
 
       free(symbols);
-      free(link_buffer);
     }
   }
 
-  return dict; 
+  return (symbol_searcher)dict; 
 error:
   return NULL;
 }
 
-int next_page(symbol_dict_t *dict) {
-  (void) dict;
-  
-  return 0;
+char* symbol_searcher_next_symbol(symbol_searcher searcher) {
+  struct symbol_searcher_t *sym = ((struct symbol_searcher_t *)searcher);
+
+  if (sym->cur >= sym->idx_len) {
+    return NULL;
+  }
+
+  bank_index idx = sym->idx[sym->cur++];
+
+  return sym->bank[idx.bank] + idx.offset;
 }
 
-void free_symbol_dict(symbol_dict_t *dict) {
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    if (dict->buffer[i]) {
-      free(dict->buffer[i]);
-    } else {
-      break;
+void free_symbol_searcher(symbol_searcher searcher) {
+  struct symbol_searcher_t *sym = ((struct symbol_searcher_t *)searcher);
+
+  for (int i = 0; i < sym->bank_len; i++) {
+    if (sym->bank[i]) {
+      free(sym->bank[i]);
     }
   }
 
-  free(dict->buffer);
-  fclose(dict->file);
+  free(sym->idx);
+  close(sym->fd);
 }
 
-uint8_t *read_section_at(FILE* file, ElfW(Ehdr) header, int i) {
-  int res, size;
-  ElfW(Off) offset = header.e_shoff + (i * header.e_shentsize);
-  res = fseek(file, offset, SEEK_SET);
-  check(!res, "failed to seek to section header");
-
-
-  ElfW(Shdr) section_header;
-  size = fread(&section_header, sizeof(section_header), 1, file);
-  check(size == 1, "failed to read section header");
-
-
-  uint8_t *buffer = malloc(section_header.sh_size);
-  check_mem(buffer);
-
-  res = fseek(file, section_header.sh_offset, SEEK_SET);
-  check(!res, "failed to seek to section content");
-
-  size = fread(buffer, sizeof(uint8_t), section_header.sh_size, file);
-  check(size == (int)section_header.sh_size, "failed to read section content");
-
-  return buffer;
-error:
-  return NULL;
-}
-
-uint8_t *read_section(FILE* file, ElfW(Shdr) header) {
-  int res, size;
+uint8_t *read_section(int fd, ElfW(Shdr) header) {
   uint8_t *buffer = malloc(header.sh_size);
   check_mem(buffer);
 
-  res = fseek(file, header.sh_offset, SEEK_SET);
-  check(!res, "failed to seek to section content");
-
-  size = fread(buffer, sizeof(uint8_t), header.sh_size, file);
-  check(size == (int)header.sh_size, "failed to read section content");
+  ssize_t res = pread(fd, buffer, header.sh_size, header.sh_offset);
+  check(res == (int)header.sh_size, "failed to read section content");
 
   return buffer;
 error:
   return NULL;
+}
+
+int read_section_header(int fd, ElfW(Ehdr) header, size_t i, ElfW(Shdr) *section_header) {
+  ssize_t res = pread(fd, section_header, sizeof(ElfW(Shdr)), header.e_shoff + (i * header.e_shentsize));
+  check(res == sizeof(ElfW(Shdr)), "failed to read Section Header");
+
+  return 0;
+error:
+  return -1;
 }
