@@ -85,7 +85,6 @@ symbol_searcher mk_symbol_searcher(char * filename) {
       check(!res, "reading linked section");
 
       if (!dict->bank[sect.sh_link]) {
-        debug("Adding bank: %d", sect.sh_link);
         dict->bank[sect.sh_link] = (char*) read_section(fd, link);
       }
 
@@ -102,8 +101,6 @@ symbol_searcher mk_symbol_searcher(char * filename) {
 
         bank_index idx = { sect.sh_link, s.st_name };
         dict->idx[dict->idx_len++] = idx;
-
-        debug("idx { bank: %d, offset: %d }", idx.bank, idx.offset);
       }
 
       free(symbols);
