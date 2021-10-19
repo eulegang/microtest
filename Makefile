@@ -10,7 +10,7 @@ EXT_HEADERS=src/microunit.h
 
 TARGET=build/microtest
 
-TEST_TARGETS=build/libsucc.so build/libfail.so
+TEST_TARGETS=build/succ.microtest build/fail.microtest
 
 all: $(TARGET) $(TEST_TARGETS)
 
@@ -27,7 +27,7 @@ objs/lib%.o: test/%.c
 objs/%.o: src/%.c $(HEADERS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-build/lib%.so: objs/lib%.o
+build/%.microtest: objs/lib%.o
 	$(CC) -shared -o $@ $<
 
 build:
