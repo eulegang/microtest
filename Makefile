@@ -1,5 +1,5 @@
 CFLAGS=-O2 -g -Wall -Wextra -Isrc -DNDEBUG $(OPTFLAGS)
-LIBS=$(OPTLIBS)
+LIBS=-ldl $(OPTLIBS)
 
 PREFIX?=/usr/local
 
@@ -10,20 +10,25 @@ EXT_HEADERS=src/microunit.h
 
 TARGET=build/microtest
 
-TEST_SOURCES=$(wildcard tests/*_tests.c)
-TEST_TARGETS=$(patsubst tests/%.c,suite/%,$(TEST_SOURCES))
+TEST_TARGETS=build/libsucc.so build/libfail.so
 
-all: $(TARGET)
+all: $(TARGET) $(TEST_TARGETS)
 
 dev: CFLAGS=-g -Wall -Wextra -Isrc $(OPTFLAGS)
 dev: all
 
 $(TARGET): CFLAGS += -rdynamic
 $(TARGET): build $(OBJECTS)
-	gcc -o $@ $(OBJECTS) -rdynamic
+	$(CC) -o $@ $(OBJECTS) -rdynamic $(LIBS)
+
+objs/lib%.o: test/%.c
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 objs/%.o: src/%.c $(HEADERS)
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+build/lib%.so: objs/lib%.o
+	$(CC) -shared -o $@ $<
 
 build:
 	@mkdir -p build

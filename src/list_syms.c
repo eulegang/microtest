@@ -58,8 +58,9 @@ symbol_searcher mk_symbol_searcher(char * filename) {
   dict->fd = fd;
   dict->bank_len = header.e_shnum;
   dict->bank = malloc(header.e_shnum * sizeof(char*));
-  dict->cur = 0;
+  dict->idx_len = 0;
   dict->idx = malloc(4096);
+  dict->cur = 0;
 
   memset(dict->bank, 0, header.e_shnum * sizeof(void*));
 

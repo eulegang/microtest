@@ -1,17 +1,18 @@
+#include <dbg.h>
 #include "microunit.h"
+#include "context.h"
 
-typedef struct inner_context {
+void push_context(microunit_ctx c, char *msg, ...) {
+  if (!c) return;
 
-
-} inner_context;
-
-void push_context(microtest_ctx *i, char *msg, ...) {
-  (void)i;
   (void)msg;
-
 }
 
-void fail(microtest_ctx *i, char *msg, ...) {
-  (void)i;
+void fail(microunit_ctx c, char *msg, ...) {
+  if (!c) return;
+
+  context_t *ctx = (context_t*)c;
   (void)msg;
+
+  log_err("failed %s", ctx->current_test);
 }
