@@ -17,9 +17,9 @@ all: $(TARGET) $(TEST_TARGETS)
 dev: CFLAGS=-g -Wall -Wextra -Isrc $(OPTFLAGS)
 dev: all
 
-$(TARGET): CFLAGS += -rdynamic
+$(TARGET): CFLAGS += -rdynamic -Wl,-rpath=.
 $(TARGET): build $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) -rdynamic -Wl,-rpath=. $(LIBS)
+	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LIBS)
 
 objs/lib%.o: test/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
