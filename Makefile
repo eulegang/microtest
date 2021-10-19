@@ -19,7 +19,7 @@ dev: all
 
 $(TARGET): CFLAGS += -rdynamic
 $(TARGET): build $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) -rdynamic $(LIBS)
+	$(CC) -o $@ $(OBJECTS) -rdynamic -Wl,-rpath=. $(LIBS)
 
 objs/lib%.o: test/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
