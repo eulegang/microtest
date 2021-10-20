@@ -10,7 +10,8 @@ EXT_HEADERS=src/microunit.h
 
 TARGET=build/microunit
 
-TEST_TARGETS=build/succ.microunit build/fail.microunit
+TEST_SOURCES=$(wildcard test/*.c)
+TEST_TARGETS=$(patsubst test/%.c,build/%.microunit,$(TEST_SOURCES))
 
 all: $(TARGET) $(TEST_TARGETS)
 
@@ -21,6 +22,8 @@ $(TARGET): CFLAGS += -rdynamic -Wl,-rpath=.
 $(TARGET): build $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LIBS)
 
+
+objs/lib%.o: CFLAGS += -fPIC
 objs/lib%.o: test/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
