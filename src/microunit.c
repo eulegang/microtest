@@ -26,4 +26,5 @@ void fail(microunit_ctx c, char *msg, ...) {
   size_t len = strlen(buf);
   ctx->msg = malloc(len);
   memcpy(ctx->msg, buf, len);
+  ctx->msg[len] = 0;
 }
