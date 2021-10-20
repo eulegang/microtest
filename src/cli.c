@@ -57,7 +57,7 @@ cli_opts build_options(int argc, char** argv) {
 }
 
 void show_help() {
-  fprintf(stdout, "microtest [-d .] [-v] [-V]\n");
+  fprintf(stdout, "microunit [-d .] [-v] [-V]\n");
   
   exit(0);
 }

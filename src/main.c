@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
     char *name = d_entry->d_name + (len - 10);
 
-    if (strncmp(name, ".microtest", 10) != 0)
+    if (strncmp(name, ".microunit", 10) != 0)
       continue;
     
     char *suite = malloc((len + dir_len) + 2 * sizeof(char));

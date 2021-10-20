@@ -8,9 +8,9 @@ OBJECTS=$(patsubst src/%.c,objs/%.o,$(SOURCES))
 HEADERS=$(wildcard src/*.h src/**/*.h)
 EXT_HEADERS=src/microunit.h
 
-TARGET=build/microtest
+TARGET=build/microunit
 
-TEST_TARGETS=build/succ.microtest build/fail.microtest
+TEST_TARGETS=build/succ.microunit build/fail.microunit
 
 all: $(TARGET) $(TEST_TARGETS)
 
@@ -27,7 +27,7 @@ objs/lib%.o: test/%.c
 objs/%.o: src/%.c $(HEADERS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-build/%.microtest: objs/lib%.o
+build/%.microunit: objs/lib%.o
 	$(CC) -shared -o $@ $<
 
 build:
