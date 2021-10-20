@@ -7,6 +7,7 @@
 
 #include "list_syms.h"
 #include "microunit.h"
+#include "suite.h"
 #include "cli.h"
 
 #define MAX_BUILD_DIR_SIZE 1024
@@ -55,8 +56,11 @@ int main(int argc, char** argv) {
   for (int i = 0; i < suites_len; i++) {
     microunit_suite *suite = mk_microsuite(suites[i]);
 
-    run_suite(suite);
+    records_t records = run_suite(suite);
 
+    report_records(records);
+
+    free_records(records);
     free_microunit_suite(suite);
   }
 

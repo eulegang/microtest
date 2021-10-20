@@ -1,8 +1,6 @@
 #ifndef __microunit_h
 #define __microunit_h
 
-#include "suite.h"
-
 typedef void* microunit_ctx;
 
 #define microunit(A) void __microunit_ ## A(microunit_ctx *_ctx)
