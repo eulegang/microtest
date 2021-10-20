@@ -9,12 +9,6 @@
 
 #define MAX_FAILURE_MESSAGE 4096
 
-void push_context(microunit_ctx c, char *msg, ...) {
-  if (!c) return;
-
-  (void)msg;
-}
-
 void fail(microunit_ctx c, char *msg, ...) {
   if (!c) return;
 
