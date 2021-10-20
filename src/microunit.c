@@ -32,6 +32,4 @@ void fail(microunit_ctx c, char *msg, ...) {
   size_t len = strlen(buf);
   ctx->msg = malloc(len);
   memcpy(ctx->msg, buf, len);
-
-  log_err("failed %s", ctx->current_test);
 }
