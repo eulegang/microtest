@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
     suite[dir_len] = '/';
     memcpy(suite + dir_len+1, (void*) d_entry->d_name, len);
     suite[dir_len + 1 + len] = 0;
-    debug("suite: %s", suite);
 
     suites[suites_len++] = suite;
   }
