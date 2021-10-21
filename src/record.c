@@ -16,14 +16,12 @@ records_t mk_records(char *suite_name) {
 }
 
 void free_records(records_t records) {
-  // TODO: free(records.suite_name);
+  free(records.suite_name);
  
   for (size_t i = 0; i < records.len; i++) {
     record_t rec = records.records[i];
     if (rec.msg)
       free(rec.msg);
-
-    // testname should be sourced from the .so
   }
 }
 
