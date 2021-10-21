@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
   glob(glob_pattern, 0, NULL, &globbuf);
 
-  for (int i = 0; i < globbuf.gl_pathc; i++) {
+  for (size_t i = 0; i < globbuf.gl_pathc; i++) {
     char *filename = globbuf.gl_pathv[i];
     microunit_suite *suite = mk_microsuite(filename);
 
