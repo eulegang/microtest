@@ -66,7 +66,9 @@ char* __suite_find_name(char *file) {
 
 int hookstream(int fd);
 
-records_t run_suite(microunit_suite *suite) {
+extern int snull;
+
+records_t run_suite(microunit_suite *suite, int flags) {
   void (*test_sym)(microunit_ctx*);
   char *sym = symbol_searcher_next_symbol(suite->searcher);
 
@@ -76,8 +78,15 @@ records_t run_suite(microunit_suite *suite) {
 
   while (sym) {
     if (strncmp(sym, "__microunit_", 12) == 0) {
-      int bstdout = hookstream(1);
-      int bstderr = hookstream(2);
+      int bstdout, bstderr;
+
+      if (flags & MICRO_SUITE_VERBOSE) {
+        bstdout = hookstream(1);
+      } else {
+        bstdout = snull;
+      }
+
+      bstderr = hookstream(2);
 
       context_t ctx;
       ctx.current_test = sym + 12; //cut out the __

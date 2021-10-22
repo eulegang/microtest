@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <glob.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "list_syms.h"
 #include "microunit.h"
@@ -15,7 +16,7 @@
 #define MAX_BUILD_DIR_SIZE 1024
 #define MAX_GLOB_PATTERN_SIZE 4096
 
-int sout, serr;
+int sout, serr, snull;
 
 int main(int argc, char** argv) {
   cli_opts opts = build_options(argc, argv);
@@ -29,12 +30,18 @@ int main(int argc, char** argv) {
 
   sout = dup(1);
   serr = dup(2);
+  snull = open("/dev/null", O_RDONLY);
+  // check file descriptor
+
+  int run_suite_flags = 0;
+  if (opts.verbose)
+    run_suite_flags |= MICRO_SUITE_VERBOSE;
 
   for (size_t i = 0; i < globbuf.gl_pathc; i++) {
     char *filename = globbuf.gl_pathv[i];
     microunit_suite *suite = mk_microsuite(filename);
 
-    records_t records = run_suite(suite);
+    records_t records = run_suite(suite, run_suite_flags);
 
     report_records(records);
 

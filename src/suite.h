@@ -3,6 +3,8 @@
 
 #include "list_syms.h"
 
+#define MICRO_SUITE_VERBOSE 1
+
 typedef enum {
   STATUS_PASS,
   STATUS_FAIL,
@@ -35,7 +37,7 @@ typedef struct {
 } context_t;
 
 microunit_suite *mk_microsuite(char *filename);
-records_t run_suite(microunit_suite *suite);
+records_t run_suite(microunit_suite *suite, int flags);
 void free_microunit_suite(microunit_suite *suite);
 
 records_t mk_records(char *suite_name);
