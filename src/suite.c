@@ -1,6 +1,10 @@
 #include <stdlib.h>
 #include <dbg.h>
 #include <dlfcn.h>
+#include <alloca.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "suite.h"
 #include "microunit.h"
@@ -60,6 +64,8 @@ char* __suite_find_name(char *file) {
   return copy;
 }
 
+int hookstream(int fd);
+
 records_t run_suite(microunit_suite *suite) {
   void (*test_sym)(microunit_ctx*);
   char *sym = symbol_searcher_next_symbol(suite->searcher);
@@ -68,9 +74,10 @@ records_t run_suite(microunit_suite *suite) {
 
   records_t records = mk_records(name);
 
-
   while (sym) {
     if (strncmp(sym, "__microunit_", 12) == 0) {
+      int bstdout = hookstream(1);
+      int bstderr = hookstream(2);
 
       context_t ctx;
       ctx.current_test = sym + 12; //cut out the __
@@ -81,7 +88,10 @@ records_t run_suite(microunit_suite *suite) {
 
       test_sym((microunit_ctx *)&ctx);
 
-      records_push(&records, &ctx);
+      fflush(stdout);
+      fflush(stderr);
+
+      records_push(&records, &ctx, bstdout, bstderr);
     }
 
     sym = symbol_searcher_next_symbol(suite->searcher);
@@ -89,3 +99,28 @@ records_t run_suite(microunit_suite *suite) {
 
   return records;
 }
+
+int hookstream(int fd) {
+  int fds[2];
+  int res;
+  int flags;
+
+  res = pipe(fds);
+  check(res != -1, "failed to pipe");
+
+
+  res = close(fd);
+  check(res != -1, "failed to copy pipe to standard file descriptor");
+  res = dup2(fds[1], fd);
+  check(res != -1, "failed to copy pipe to standard file descriptor");
+  
+  flags = fcntl(fds[0], F_GETFL);
+  flags |= O_NONBLOCK;
+  check(!fcntl(fds[0], F_SETFL, flags), "failed to set nonblocking");
+
+  return fds[0];
+
+error:
+  return -1;
+}
+

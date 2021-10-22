@@ -3,8 +3,7 @@
 #include <stdio.h>
 
 microunit(basic_fail) {
-  fprintf(stderr, "failed to blah blah blah\n"); 
+  dprintf(2, "failed to blah blah blah\n");
   assert(0, "0 should be false");
 }
-
 

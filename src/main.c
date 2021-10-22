@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glob.h>
+#include <unistd.h>
 
 #include "list_syms.h"
 #include "microunit.h"
@@ -13,6 +14,8 @@
 
 #define MAX_BUILD_DIR_SIZE 1024
 #define MAX_GLOB_PATTERN_SIZE 4096
+
+int sout, serr;
 
 int main(int argc, char** argv) {
   cli_opts opts = build_options(argc, argv);
@@ -23,6 +26,9 @@ int main(int argc, char** argv) {
   glob_t globbuf;
 
   glob(glob_pattern, 0, NULL, &globbuf);
+
+  sout = dup(1);
+  serr = dup(2);
 
   for (size_t i = 0; i < globbuf.gl_pathc; i++) {
     char *filename = globbuf.gl_pathv[i];
