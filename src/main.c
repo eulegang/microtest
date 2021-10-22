@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
   if (opts.quiet)
     run_suite_flags |= MICRO_SUITE_QUIET;
 
+  int pass = 0;
   for (size_t i = 0; i < globbuf.gl_pathc; i++) {
     char *filename = globbuf.gl_pathv[i];
     microunit_suite *suite = mk_microsuite(filename);
@@ -47,6 +48,7 @@ int main(int argc, char** argv) {
     records_t records = run_suite(suite, run_suite_flags);
 
     report_records(records, run_suite_flags);
+    pass |= records_fail(records);
 
     free_records(records);
     free_microunit_suite(suite);
@@ -54,6 +56,6 @@ int main(int argc, char** argv) {
 
   globfree(&globbuf);
 
-  return 0;
+  return pass;
 }
 

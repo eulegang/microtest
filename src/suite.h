@@ -43,6 +43,7 @@ void free_microunit_suite(microunit_suite *suite);
 
 records_t mk_records(char *suite_name);
 void records_push(records_t*, context_t*, int, int);
+int  records_fail(records_t);
 void free_records(records_t);
 
 void report_records(records_t, int flags);

@@ -74,6 +74,17 @@ void report_records(records_t records, int flags) {
   }
 }
 
+int records_fail(records_t records) {
+  for (size_t i = 0; i < records.len; i++) {
+    record_t rec = records.records[i];
+    if (rec.status == STATUS_FAIL) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 char *collect_fd(int fd) {
   char *buf = alloca(READ_BUF_SIZE);
 
