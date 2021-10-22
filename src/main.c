@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
     records_t records = run_suite(suite, run_suite_flags);
 
-    report_records(records);
+    report_records(records, run_suite_flags);
 
     free_records(records);
     free_microunit_suite(suite);

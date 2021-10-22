@@ -49,7 +49,7 @@ void records_push(records_t *records, context_t* ctx, int out, int err) {
 
 extern int sout, serr;
 
-void report_records(records_t records) {
+void report_records(records_t records, int flags) {
   dprintf(sout, "%s\n", records.suite_name);
   for (size_t i = 0; i < records.len; i++) {
     record_t rec = records.records[i];
@@ -66,7 +66,7 @@ void report_records(records_t records) {
       dprintf(sout, "\x1b[36m--- end   stdout ---\x1b[0m\n");
     }
 
-    if (rec.err) {
+    if (rec.err && (rec.status == STATUS_FAIL || flags & MICRO_SUITE_VERBOSE) ) {
       dprintf(sout, "\x1b[31m--- begin stderr ---\x1b[0m\n");
       dprintf(sout, "%s", rec.err);
       dprintf(sout, "\x1b[31m--- end   stdout ---\x1b[0m\n");
