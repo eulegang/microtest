@@ -33,6 +33,7 @@ void free_microunit_suite(microunit_suite *suite) {
 
   if (suite->handle) dlclose(suite->handle);
   if (suite->searcher) free_symbol_searcher(suite->searcher);
+  free(suite);
 }
 
 char* __suite_find_name(char *file) {

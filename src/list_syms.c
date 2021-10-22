@@ -68,10 +68,6 @@ symbol_searcher mk_symbol_searcher(char * filename) {
   res = read_section_header(fd, header, header.e_shstrndx, &sect_header);
   check(!res, "failed to read string table");
 
-  char *buffer = (char*)read_section(fd, sect_header);
-  check_mem(buffer);
-
-
   for (int i = 0; i < header.e_shnum; i++) {
     ElfW(Shdr) sect;
 
@@ -133,8 +129,10 @@ void free_symbol_searcher(symbol_searcher searcher) {
     }
   }
 
+  free(sym->bank);
   free(sym->idx);
   close(sym->fd);
+  free(sym);
 }
 
 uint8_t *read_section(int fd, ElfW(Shdr) header) {

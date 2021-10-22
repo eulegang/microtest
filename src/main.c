@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
   glob_t globbuf;
 
   glob(glob_pattern, 0, NULL, &globbuf);
+  free(glob_pattern);
 
   sout = dup(1);
   serr = dup(2);

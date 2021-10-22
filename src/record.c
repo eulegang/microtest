@@ -31,6 +31,8 @@ void free_records(records_t records) {
     if (rec.err)
       free(rec.err);
   }
+
+  free(records.records);
 }
 
 char *collect_fd(int fd);
