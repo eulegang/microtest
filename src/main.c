@@ -54,6 +54,9 @@ int main(int argc, char** argv) {
     free_microunit_suite(suite);
   }
 
+  close(sout);
+  close(serr);
+  close(snull);
   globfree(&globbuf);
 
   return pass;
