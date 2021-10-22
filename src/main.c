@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
   cli_opts opts = build_options(argc, argv);
 
   char *glob_pattern = malloc(MAX_GLOB_PATTERN_SIZE);
+  *glob_pattern = 0;
   strncat(glob_pattern, opts.build_dir, MAX_GLOB_PATTERN_SIZE); 
   strncat(glob_pattern, "/*.microunit", MAX_GLOB_PATTERN_SIZE); 
   glob_t globbuf;
