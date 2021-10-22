@@ -7,6 +7,7 @@ const char* VERSION = "0.1.0";
 
 static struct option cli_options[] = {
   { "verbose", no_argument, 0, 'v' },
+  { "quiet", no_argument, 0, 'q' },
   { "help", no_argument, 0, 'h' },
   { "dir", required_argument, 0, 'd' },
   { "version", no_argument, 0, 'V' },
@@ -24,7 +25,7 @@ cli_opts build_options(int argc, char** argv) {
 
   int option_index = 0;
   while (1) {
-    c = getopt_long(argc, argv, "vVhd:", cli_options, &option_index);
+    c = getopt_long(argc, argv, "vVqhd:", cli_options, &option_index);
 
     if (c == -1) break;
 
@@ -35,6 +36,10 @@ cli_opts build_options(int argc, char** argv) {
 
       case 'v':
         cli.verbose = 1;
+        break;
+
+      case 'q':
+        cli.quiet = 1;
         break;
 
       case 'V':
@@ -51,6 +56,11 @@ cli_opts build_options(int argc, char** argv) {
       default:
         abort();
     }
+  }
+
+  if (cli.quiet && cli.verbose) {
+    fprintf(stderr, "microunit does not run in both quiet and verbose modes\n");
+    exit(1);
   }
 
   return cli;

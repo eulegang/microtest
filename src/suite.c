@@ -83,10 +83,16 @@ records_t run_suite(microunit_suite *suite, int flags) {
       if (flags & MICRO_SUITE_VERBOSE) {
         bstdout = hookstream(1);
       } else {
+        dup2(snull, 1);
         bstdout = snull;
       }
 
-      bstderr = hookstream(2);
+      if (flags & MICRO_SUITE_QUIET) {
+        dup2(snull, 2);
+        bstderr = snull;
+      } else {
+        bstderr = hookstream(2);
+      }
 
       context_t ctx;
       ctx.current_test = sym + 12; //cut out the __

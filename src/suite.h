@@ -4,6 +4,7 @@
 #include "list_syms.h"
 
 #define MICRO_SUITE_VERBOSE 1
+#define MICRO_SUITE_QUIET 2
 
 typedef enum {
   STATUS_PASS,

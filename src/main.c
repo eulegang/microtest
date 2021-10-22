@@ -30,12 +30,15 @@ int main(int argc, char** argv) {
 
   sout = dup(1);
   serr = dup(2);
-  snull = open("/dev/null", O_RDONLY);
+  snull = open("/dev/null", O_RDWR);
   // check file descriptor
 
   int run_suite_flags = 0;
   if (opts.verbose)
     run_suite_flags |= MICRO_SUITE_VERBOSE;
+
+  if (opts.quiet)
+    run_suite_flags |= MICRO_SUITE_QUIET;
 
   for (size_t i = 0; i < globbuf.gl_pathc; i++) {
     char *filename = globbuf.gl_pathv[i];
