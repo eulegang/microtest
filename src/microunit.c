@@ -9,7 +9,7 @@
 
 #define MAX_FAILURE_MESSAGE 4096
 
-void fail(microunit_ctx c, char *msg, ...) {
+void __mu_fail(microunit_ctx c, char *msg, ...) {
   if (!c) return;
 
   context_t *ctx = (context_t*)c;
