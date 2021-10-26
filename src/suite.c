@@ -79,20 +79,24 @@ records_t run_suite(microunit_suite *suite, int flags) {
 
   while (sym) {
     if (strncmp(sym, "__microunit_", 12) == 0) {
-      int bstdout, bstderr;
+      int bstdout, bstderr, stdout_hooked, stderr_hooked;
 
       if (flags & MICRO_SUITE_VERBOSE) {
         bstdout = hookstream(1);
+        stdout_hooked = 1;
       } else {
         dup2(snull, 1);
         bstdout = snull;
+        stdout_hooked = 0;
       }
 
       if (flags & MICRO_SUITE_QUIET) {
         dup2(snull, 2);
         bstderr = snull;
+        stderr_hooked = 0;
       } else {
         bstderr = hookstream(2);
+        stderr_hooked = 1;
       }
 
       context_t ctx;
@@ -108,6 +112,9 @@ records_t run_suite(microunit_suite *suite, int flags) {
       fflush(stderr);
 
       records_push(&records, &ctx, bstdout, bstderr);
+
+      if (stdout_hooked) close(bstdout);
+      if (stderr_hooked) close(bstderr);
     }
 
     sym = symbol_searcher_next_symbol(suite->searcher);
@@ -127,14 +134,19 @@ int hookstream(int fd) {
 
   res = close(fd);
   check(res != -1, "failed to copy pipe to standard file descriptor");
+
   res = dup2(fds[1], fd);
   check(res != -1, "failed to copy pipe to standard file descriptor");
+
+  res = close(fds[1]);
+  check(res != -1, "failed to close old file descriptor");
   
   flags = fcntl(fds[0], F_GETFL);
   flags |= O_NONBLOCK;
   check(!fcntl(fds[0], F_SETFL, flags), "failed to set nonblocking");
 
   return fds[0];
+
 
 error:
   return -1;
