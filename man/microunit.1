@@ -1,0 +1,53 @@
+.TH microunit 1 "Microunit Manual"
+
+.Sh NAME
+.B microunit
+a unit testing framework/runner for C
+
+.SH SYNOPSIS
+.B microunit
+.RB [OPTIONS]
+
+.SH DESCRIPTION
+.B microunit
+
+Runs unit tests.
+
+.SH SUITES
+
+Test suites should `#include <microunit.h>`.
+
+All suites should be compiled into shared libraries.
+
+.SH OPTIONS
+.IP "\fB-h|--help\fP"
+Prints help
+
+.IP "\fB-V|--version\fP"
+Prints the current version
+
+.IP "\fB-v|--verbose\fP"
+Prints more information
+
+.IP "\fB-q|--quiet\fP"
+Surpess all streamed output
+
+.IP "\fB-d|--dir <dir>\fP"
+Specify the directory to find test suites
+
+.SH EXIT STATUS
+.TP
+.B
+0
+All tests have passed
+
+.TP
+.B
+1
+A test has failed
+
+.TP
+.B
+2
+Executable failure
+

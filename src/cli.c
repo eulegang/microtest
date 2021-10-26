@@ -60,7 +60,7 @@ cli_opts build_options(int argc, char** argv) {
 
   if (cli.quiet && cli.verbose) {
     fprintf(stderr, "microunit does not run in both quiet and verbose modes\n");
-    exit(1);
+    exit(2);
   }
 
   return cli;
