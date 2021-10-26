@@ -47,5 +47,8 @@ install:
 	install -t $(DESTDIR)/$(PREFIX)/include -m 0755 $(EXT_HEADERS)
 	install -d $(DESTDIR)/$(PREFIX)/lib
 	install -t $(DESTDIR)/$(PREFIX)/lib $(TARGET)
-	install -t $(DESTDIR)/$(PREFIX)/share/man/man1/microunit.1 man/microunit.1
+	install -d $(DESTDIR)/$(PREFIX)/share \
+		$(DESTDIR)/$(PREFIX)/share/man \
+		$(DESTDIR)/$(PREFIX)/share/man/man1
+	install -t $(DESTDIR)/$(PREFIX)/share/man/man1/ man/microunit.1
 
